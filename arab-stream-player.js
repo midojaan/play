@@ -11,23 +11,30 @@
                 this.container = document.getElementById(containerId);
                 this.sources = sources; // قائمة السيرفرات
                 this.video = document.createElement('video');
+                this.video.setAttribute('controls', 'true');
+                this.video.style.width = '100%';
+                this.video.style.borderRadius = '10px';
+                this.container.appendChild(this.video);
                 this.initPlayer();
             }
 
             initPlayer() {
-                // إعداد الفيديو
-                this.video.setAttribute('controls', true);
-                this.video.style.width = '100%';
-                this.video.style.borderRadius = '10px';
-
-                // إضافة أول رابط فيديو تلقائيًا
                 if (this.sources.length > 0) {
-                    this.video.src = this.sources[0].url;
+                    const firstSource = this.sources[0];
+                    this.loadSource(firstSource);
                 }
-
-                // إضافة الفيديو إلى الحاوية
-                this.container.appendChild(this.video);
                 this.createServerSwitcher();
+            }
+
+            loadSource(source) {
+                if (Hls.isSupported() && source.type === 'application/x-mpegURL') {
+                    const hls = new Hls();
+                    hls.loadSource(source.url);
+                    hls.attachMedia(this.video);
+                } else {
+                    this.video.src = source.url;
+                    this.video.play();
+                }
             }
 
             createServerSwitcher() {
@@ -46,8 +53,7 @@
                     button.style.cursor = 'pointer';
 
                     button.onclick = () => {
-                        this.video.src = source.url;
-                        this.video.play();
+                        this.loadSource(source);
                     };
 
                     serverSwitcher.appendChild(button);
