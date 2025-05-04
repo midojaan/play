@@ -1,60 +1,99 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <title>تحليل سوق كيوتكس عبر الكاميرا</title>
-    <style>
-        body {
-            background-color: #f0f0f0;
-            font-family: 'Cairo', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            direction: rtl;
-        }
+  <meta charset="UTF-8">
+  <title>تحليل سوق كيوتكس بالكاميرا والذكاء الصناعي</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      direction: rtl;
+    }
 
-        h1 {
-            color: #0F4551;
-            margin-bottom: 20px;
-        }
+    h1 {
+      color: #0F4551;
+    }
 
-        video {
-            width: 640px;
-            height: 480px;
-            border: 4px solid #0F4551;
-            border-radius: 12px;
-            background: black;
-        }
+    video {
+      width: 640px;
+      height: 480px;
+      border: 4px solid #0F4551;
+      border-radius: 12px;
+      background: black;
+    }
 
-        #decision {
-            margin-top: 20px;
-            font-size: 24px;
-            color: #333;
-        }
-    </style>
+    #decision {
+      margin-top: 20px;
+      font-size: 24px;
+      color: #0F4551;
+    }
+  </style>
 </head>
 <body>
-    <h1>فتح الكاميرا وتحليل سوق كيوتكس</h1>
-    <video id="video" autoplay playsinline></video>
-    <div id="decision">جاري تحميل الكاميرا...</div>
+  <h1>تحليل السوق بالكاميرا والذكاء الصناعي</h1>
+  <video id="video" autoplay playsinline></video>
+  <div id="decision">جاري تحميل النموذج...</div>
 
-    <script>
-        const video = document.getElementById('video');
-        const decision = document.getElementById('decision');
+  <script>
+    const video = document.getElementById('video');
+    const decision = document.getElementById('decision');
+    let model;
 
-        // طلب إذن فتح الكاميرا
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then((stream) => {
-                video.srcObject = stream;
-                decision.textContent = "تم تشغيل الكاميرا. جاري التحليل...";
-            })
-            .catch((error) => {
-                decision.textContent = "فشل في فتح الكاميرا: " + error.message;
-                console.error(error);
-            });
-    </script>
+    // طلب تشغيل الكاميرا الخلفية
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } }
+    })
+    .then(stream => {
+      video.srcObject = stream;
+    })
+    .catch(error => {
+      decision.textContent = "فشل في تشغيل الكاميرا: " + error.message;
+      console.error(error);
+    });
+
+    // تحميل نموذج MobileNet
+    async function loadModel() {
+      decision.textContent = "جاري تحميل نموذج الذكاء الصناعي...";
+      model = await mobilenet.load();
+      decision.textContent = "تم تحميل النموذج. جاري التحليل...";
+      classifyLoop();
+    }
+
+    // تحليل مستمر للصورة من الكاميرا
+    async function classifyLoop() {
+      if (!model) return;
+
+      const predictions = await model.classify(video);
+
+      if (predictions && predictions.length > 0) {
+        const label = predictions[0].className.toLowerCase();
+
+        // لو فيه كلمات معينة، نربطها بقرار (مجرد مثال مبدئي)
+        if (label.includes("up") || label.includes("arrow")) {
+          decision.textContent = "📈 القرار: صعود لمدة دقيقة";
+        } else if (label.includes("down") || label.includes("graph") || label.includes("bear")) {
+          decision.textContent = "📉 القرار: هبوط لمدة دقيقة";
+        } else {
+          decision.textContent = "🔄 القرار: تذبذب - لا توجد إشارة واضحة";
+        }
+
+        console.log("التحليل:", predictions);
+      }
+
+      // إعادة التحليل كل ثانية
+      setTimeout(classifyLoop, 1000);
+    }
+
+    // بدء تحميل النموذج
+    loadModel();
+  </script>
 </body>
 </html>
