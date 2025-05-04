@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فتح الكاميرا وتحليل السوق</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+        }
+        h1 {
+            text-align: center;
+        }
+        #video {
+            display: block;
+            margin: 0 auto;
+        }
+        #decision {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>فتح الكاميرا لتحليل سوق كيوتكس</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <div id="decision">تحليل السوق سيظهر هنا...</div>
+
+    <script>
+        const video = document.getElementById('video');
+        const decisionElement = document.getElementById('decision');
+
+        // فتح الكاميرا
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("حدث خطأ في فتح الكاميرا: ", err);
+            });
+
+        // تحميل نموذج MobileNet لتحليل الصور
+        let model;
+        async function loadModel() {
+            model = await mobilenet.load();
+            console.log("تم تحميل النموذج بنجاح.");
+            classifyImage();
+        }
+
+        // تحليل الصورة من الكاميرا
+        async function classifyImage() {
+            const predictions = await model.classify(video);
+
+            // هنا يمكن تخصيص التحليل بناءً على ما يراه النموذج
+            console.log(predictions);
+            
+            // بناءً على التحليل، يمكن إعطاء قرار
+            if (predictions[0].className.includes("صاعد")) {
+                decisionElement.textContent = "القرار: صعود";
+            } else if (predictions[0].className.includes("هابط")) {
+                decisionElement.textContent = "القرار: هبوط";
+            } else {
+                decisionElement.textContent = "القرار: في حالة تذبذب";
+            }
+
+            // الاستمرار في تصنيف الصورة
+            setTimeout(classifyImage, 1000);
+        }
+
+        // تحميل النموذج عندما يكون جاهزًا
+        loadModel();
+    </script>
+</body>
+</html>
