@@ -2,9 +2,10 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>تشغيل الكاميرا الخلفية + ذكاء صناعي</title>
+  <title>تحليل السوق - عرض أفقي</title>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -13,46 +14,52 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      padding: 0;
       margin: 0;
       direction: rtl;
+      height: 100vh;
     }
 
     h1 {
       color: #0F4551;
+      margin: 10px;
+      font-size: 20px;
     }
 
     video {
-      width: 640px;
-      height: 480px;
+      width: 90vw;
+      height: calc(90vw * 9 / 16); /* نسبة 16:9 للعرض */
       border: 4px solid #0F4551;
       border-radius: 12px;
       background: black;
+      object-fit: cover;
     }
 
     #decision {
-      margin-top: 20px;
-      font-size: 24px;
+      margin-top: 10px;
+      font-size: 22px;
       color: #0F4551;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <h1>تحليل السوق بالكاميرا الخلفية</h1>
   <video id="video" autoplay playsinline></video>
-  <div id="decision">جاري تفعيل الكاميرا الخلفية...</div>
+  <div id="decision">جاري تفعيل الكاميرا وتحميل النموذج...</div>
 
   <script>
     const video = document.getElementById('video');
     const decision = document.getElementById('decision');
     let model;
 
-    // تفعيل الكاميرا الخلفية بأكبر قدر من التوافق
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: { ideal: "environment" }
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
           },
           audio: false
         });
@@ -67,15 +74,13 @@
       }
     }
 
-    // تحميل نموذج الذكاء الصناعي
     async function loadModel() {
-      decision.textContent = "جاري تحميل نموذج الذكاء الصناعي...";
+      decision.textContent = "جارٍ تحميل نموذج الذكاء الاصطناعي...";
       model = await mobilenet.load();
-      decision.textContent = "تم تحميل النموذج. جاري التحليل...";
+      decision.textContent = "تم التحميل. جارٍ التحليل...";
       classifyLoop();
     }
 
-    // تحليل مستمر
     async function classifyLoop() {
       if (!model) return;
 
@@ -95,10 +100,9 @@
         console.log("تحليل:", predictions);
       }
 
-      setTimeout(classifyLoop, 1500); // تحليل كل 1.5 ثانية
+      setTimeout(classifyLoop, 1500);
     }
 
-    // بدء الكاميرا
     startCamera();
   </script>
 </body>
