@@ -2,77 +2,59 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فتح الكاميرا وتحليل السوق</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+    <title>تحليل سوق كيوتكس عبر الكاميرا</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
             direction: rtl;
         }
+
         h1 {
-            text-align: center;
+            color: #0F4551;
+            margin-bottom: 20px;
         }
-        #video {
-            display: block;
-            margin: 0 auto;
+
+        video {
+            width: 640px;
+            height: 480px;
+            border: 4px solid #0F4551;
+            border-radius: 12px;
+            background: black;
         }
+
         #decision {
-            text-align: center;
-            font-size: 24px;
             margin-top: 20px;
+            font-size: 24px;
+            color: #333;
         }
     </style>
 </head>
 <body>
-    <h1>فتح الكاميرا لتحليل سوق كيوتكس</h1>
-    <video id="video" width="640" height="480" autoplay></video>
-    <div id="decision">تحليل السوق سيظهر هنا...</div>
+    <h1>فتح الكاميرا وتحليل سوق كيوتكس</h1>
+    <video id="video" autoplay playsinline></video>
+    <div id="decision">جاري تحميل الكاميرا...</div>
 
     <script>
         const video = document.getElementById('video');
-        const decisionElement = document.getElementById('decision');
+        const decision = document.getElementById('decision');
 
-        // فتح الكاميرا
+        // طلب إذن فتح الكاميرا
         navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
+            .then((stream) => {
                 video.srcObject = stream;
+                decision.textContent = "تم تشغيل الكاميرا. جاري التحليل...";
             })
-            .catch(err => {
-                console.error("حدث خطأ في فتح الكاميرا: ", err);
+            .catch((error) => {
+                decision.textContent = "فشل في فتح الكاميرا: " + error.message;
+                console.error(error);
             });
-
-        // تحميل نموذج MobileNet لتحليل الصور
-        let model;
-        async function loadModel() {
-            model = await mobilenet.load();
-            console.log("تم تحميل النموذج بنجاح.");
-            classifyImage();
-        }
-
-        // تحليل الصورة من الكاميرا
-        async function classifyImage() {
-            const predictions = await model.classify(video);
-
-            // هنا يمكن تخصيص التحليل بناءً على ما يراه النموذج
-            console.log(predictions);
-            
-            // بناءً على التحليل، يمكن إعطاء قرار
-            if (predictions[0].className.includes("صاعد")) {
-                decisionElement.textContent = "القرار: صعود";
-            } else if (predictions[0].className.includes("هابط")) {
-                decisionElement.textContent = "القرار: هبوط";
-            } else {
-                decisionElement.textContent = "القرار: في حالة تذبذب";
-            }
-
-            // الاستمرار في تصنيف الصورة
-            setTimeout(classifyImage, 1000);
-        }
-
-        // تحميل النموذج عندما يكون جاهزًا
-        loadModel();
     </script>
 </body>
 </html>
