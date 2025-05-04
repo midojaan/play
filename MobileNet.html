@@ -1,109 +1,347 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-  <meta charset="UTF-8">
-  <title>تحليل السوق - عرض أفقي</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>لوحة إشارات التداول</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo" /><style>
     body {
-      font-family: 'Cairo', sans-serif;
-      background-color: #f0f0f0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      margin: 0;
-      direction: rtl;
-      height: 100vh;
+        font-family: 'Cairo', sans-serif;
+        background-color: #121212;
+        color: white;
+        text-align: center;
+        padding: 20px;
     }
-
+    .container {
+        margin: 0 auto;
+        max-width: 800px;
+    }
     h1 {
-      color: #0F4551;
-      margin: 10px;
-      font-size: 20px;
+        font-size: 2.5rem;
+        color: #4CAF50;
+    }
+    .top-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #1E1E1E;
+        border-radius: 5px;
+        flex-wrap: wrap;
+    }
+    select, input, button {
+        padding: 10px;
+        background-color: #333;
+        color: white;
+        border: 1px solid #444;
+        border-radius: 5px;
+    }
+    .manual-refresh button {
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+    .manual-refresh button:hover {
+        background-color: #45a049;
+    }
+    #signal-container {
+        margin-top: 20px;
+        background-color: #1E1E1E;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #333;
+        font-size: 1.2rem;
+    }
+    #signal-log {
+        margin-top: 20px;
+        background-color: #1E1E1E;
+        padding: 20px;
+        border-radius: 10px;
+        max-height: 360px;
+        overflow-y: auto;
+        direction: rtl;
+        text-align: right;
+        border: 1px solid #333;
+    }
+    #signal-log table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    #signal-log th, #signal-log td {
+        border: 1px solid #444;
+        padding: 8px;
+        text-align: center;
+    }
+    #signal-log th {
+        background-color: #333;
+    }
+    #signal-log td {
+        background-color: #222;
+    }
+    #signal-log tr:nth-child(even) {
+        background-color: #2A2A2A;
+    }
+    #signal-log td:last-child {
+        text-align: left;
+    }
+</style>
+<div class="container">
+	    
+	<h1>
+		لوحة إشارات التداول
+	</h1>
+	    
+	<div class="top-controls">
+		        <select id="currencyPairSelect">            <option value="">-- اختر زوج --</option>            <option value="EUR/USD">EUR/USD</option>            <option value="GBP/USD">GBP/USD</option>            <option value="USD/JPY">USD/JPY</option>            <option value="AUD/USD">AUD/USD</option>            <option value="USD/CAD">USD/CAD</option>            <option value="NZD/USD">NZD/USD</option> 
+			<!--  عملة جديدة  -->            <option value="USD/CHF">USD/CHF</option> 
+			<!--  عملة جديدة  -->            <option value="EUR/JPY">EUR/JPY</option> 
+			<!--  عملة جديدة  -->            <option value="GBP/JPY">GBP/JPY</option> 
+			<!--  عملة جديدة  -->        </select>         <select id="autoRefreshSelect">            <option value="5">تحديث كل 5 ثواني</option>            <option selected="" value="10">تحديث كل 10 ثواني</option>            <option value="15">تحديث كل 15 ثانية</option>        </select>         <input placeholder="أدخل مفتاح API هنا" type="text" id="apiKeyInput" />        
+		<button style="background-color: #2196F3;" id="saveApiKey">
+			حفظ
+		</button>
+		         
+		<div class="manual-refresh">
+			            
+			<button onclick="analyzeMarket()">
+				تحديث يدوي
+			</button>
+			        
+		</div>
+		    
+	</div>
+	     
+	<div id="signal-container">
+		        
+		<h2>
+			إشارات التداول ستظهر هنا
+		</h2>
+		    
+	</div>
+	     
+	<div id="signal-log">
+		        
+		<h3>
+			سجل الإشارات
+		</h3>
+		        
+		<table>
+			            
+			<thead>
+				                
+				<tr>
+					                    
+					<th>
+						العملة
+					</th>
+					                    
+					<th>
+						الصفقة
+					</th>
+					                    
+					<th>
+						السعر
+					</th>
+					                    
+					<th>
+						RSI
+					</th>
+					                    
+					<th>
+						MA9
+					</th>
+					                    
+					<th>
+						MA21
+					</th>
+					                    
+					<th>
+						الوقت
+					</th>
+					                
+				</tr>
+				            
+			</thead>
+			            <tbody id="logBody">                
+				<!--  سيتم إضافة السجلات هنا  -->            </tbody>        
+		</table>
+		    
+	</div>
+</div>
+ <audio preload="auto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" id="alertSound"></audio> <script>
+let selectedPair = '';
+let apiKey = '';
+let analyzeInterval;
+let updateIntervalSeconds = 10;
+
+// تحميل apiKey المحفوظ لو موجود
+if (localStorage.getItem('savedApiKey')) {
+    apiKey = localStorage.getItem('savedApiKey');
+    document.getElementById('apiKeyInput').value = apiKey;
+}
+
+// للحصول على بيانات السوق
+async function getMarketData(pair) {
+    if (!apiKey) {
+        alert("يرجى إدخال مفتاح API");
+        return [];
     }
 
-    video {
-      width: 90vw;
-      height: calc(90vw * 9 / 16); /* نسبة 16:9 للعرض */
-      border: 4px solid #0F4551;
-      border-radius: 12px;
-      background: black;
-      object-fit: cover;
+    const url = `https://api.twelvedata.com/time_series?symbol=${pair}&interval=1min&outputsize=50&apikey=${apiKey}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.values && data.values.length > 0) {
+        return data.values.map(v => parseFloat(v.close));
+    } else {
+        return [];
     }
+}
 
-    #decision {
-      margin-top: 10px;
-      font-size: 22px;
-      color: #0F4551;
-      text-align: center;
+// لحساب المتوسط المتحرك
+function calculateMovingAverage(data, period) {
+    if (data.length < period) return null;
+    const slice = data.slice(data.length - period);
+    const sum = slice.reduce((acc, val) => acc + val, 0);
+    return sum / period;
+}
+
+// لحساب RSI
+function calculateRSI(data, period) {
+    if (data.length < period) return null;
+    let gains = 0, losses = 0;
+    for (let i = 1; i < period; i++) {
+        let change = data[i] - data[i - 1];
+        if (change > 0) gains += change;
+        else losses -= change;
     }
-  </style>
-</head>
-<body>
-  <h1>تحليل السوق بالكاميرا الخلفية</h1>
-  <video id="video" autoplay playsinline></video>
-  <div id="decision">جاري تفعيل الكاميرا وتحميل النموذج...</div>
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+    let rs = avgGain / avgLoss;
+    return 100 - (100 / (1 + rs));
+}
 
-  <script>
-    const video = document.getElementById('video');
-    const decision = document.getElementById('decision');
-    let model;
+// لتحليل السوق وإظهار الإشارة
+async function analyzeMarket() {
+    if (!selectedPair || !apiKey) return;
 
-    async function startCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: "environment" },
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          },
-          audio: false
-        });
+    const prices = await getMarketData(selectedPair);
+    if (prices.length > 0) {
+        const ma9_now = calculateMovingAverage(prices, 9);
+        const ma21_now = calculateMovingAverage(prices, 21);
+        const ma9_previous = calculateMovingAverage(prices.slice(1), 9);
+        const ma21_previous = calculateMovingAverage(prices.slice(1), 21);
+        const rsi = calculateRSI(prices, 14);
 
-        video.srcObject = stream;
-        decision.textContent = "تم تشغيل الكاميرا الخلفية. جاري التحليل...";
-        await loadModel();
+        const signalContainer = document.getElementById('signal-container');
+        const logBody = document.getElementById('logBody');
+        let newSignal = '';
 
-      } catch (error) {
-        decision.textContent = "فشل في تشغيل الكاميرا الخلفية: " + error.message;
-        console.error(error);
-      }
-    }
+        const currentPrice = prices[0];
+        const now = new Date().toLocaleTimeString();
 
-    async function loadModel() {
-      decision.textContent = "جارٍ تحميل نموذج الذكاء الاصطناعي...";
-      model = await mobilenet.load();
-      decision.textContent = "تم التحميل. جارٍ التحليل...";
-      classifyLoop();
-    }
+        if (ma9_now && ma21_now && ma9_previous && ma21_previous && rsi !== null) {
+            if (rsi < 30 && ma9_now > ma21_now) {
+                newSignal = `
+                    <tr>
+                        <td>${selectedPair}</td>
+                        <td style="color: #00FF00;">شراء</td>
+                        <td>${currentPrice}</td>
+                        <td>${rsi.toFixed(2)}</td>
+                        <td>${ma9_now.toFixed(2)}</td>
+                        <td>${ma21_now.toFixed(2)}</td>
+                        <td>${now}</td>
+                    </tr>
+                `;
+                signalContainer.innerHTML = `
+                    <h2 style="color: #00FF00;">صفقة شراء الآن!</h2>
+                    <p>ادخل شراء لمدة دقيقة أو دقيقتين ✅</p>
+                `;
+                document.body.style.backgroundColor = "#0f3322";
+                playSound();
+            } else if (rsi > 70 && ma9_now < ma21_now) {
+                newSignal = `
+                    <tr>
+                        <td>${selectedPair}</td>
+                        <td style="color: #FF4444;">بيع</td>
+                        <td>${currentPrice}</td>
+                        <td>${rsi.toFixed(2)}</td>
+                        <td>${ma9_now.toFixed(2)}</td>
+                        <td>${ma21_now.toFixed(2)}</td>
+                        <td>${now}</td>
+                    </tr>
+                `;
+                signalContainer.innerHTML = `
+                    <h2 style="color: #FF4444;">صفقة بيع الآن!</h2>
+                    <p>ادخل بيع لمدة دقيقة أو دقيقتين ✅</p>
+                `;
+                document.body.style.backgroundColor = "#331111";
+                playSound();
+            } else {
+                newSignal = `
+                    <tr>
+                        <td>${selectedPair}</td>
+                        <td style="color: #FFC107;">لا توجد فرصة</td>
+                        <td>${currentPrice}</td>
+                        <td>${rsi.toFixed(2)}</td>
+                        <td>${ma9_now.toFixed(2)}</td>
+                        <td>${ma21_now.toFixed(2)}</td>
+                        <td>${now}</td>
+                    </tr>
+                `;
+                signalContainer.innerHTML = `
+                    <h2 style="color: #FFC107;">لا توجد فرصة مناسبة حاليا...</h2>
+                    <p>جاري انتظار الصفقة القادمة...</p>
+                `;
+                document.body.style.backgroundColor = "#121212";
+            }
 
-    async function classifyLoop() {
-      if (!model) return;
-
-      const predictions = await model.classify(video);
-
-      if (predictions && predictions.length > 0) {
-        const label = predictions[0].className.toLowerCase();
-
-        if (label.includes("arrow") || label.includes("up")) {
-          decision.textContent = "📈 القرار: صعود لمدة دقيقة";
-        } else if (label.includes("down") || label.includes("graph") || label.includes("bear")) {
-          decision.textContent = "📉 القرار: هبوط لمدة دقيقة";
-        } else {
-          decision.textContent = "🔄 القرار: تذبذب - لا توجد إشارة واضحة";
+            logBody.insertAdjacentHTML('afterbegin', newSignal);
         }
-
-        console.log("تحليل:", predictions);
-      }
-
-      setTimeout(classifyLoop, 1500);
     }
+}
 
-    startCamera();
-  </script>
-</body>
-</html>
+function playSound() {
+    const alertSound = document.getElementById('alertSound');
+    alertSound.play();
+}
+
+// عند تغيير الزوج المحدد
+document.getElementById('currencyPairSelect').addEventListener('change', (e) => {
+    selectedPair = e.target.value;
+    document.getElementById('signal-container').innerHTML = `
+        <h2>جاري التحليل للزوج: ${selectedPair} ...</h2>
+    `;
+    if (analyzeInterval) clearInterval(analyzeInterval);
+    analyzeMarket();
+    analyzeInterval = setInterval(() => {
+        analyzeMarket();
+    }, updateIntervalSeconds * 1000);
+});
+
+// عند تغيير مفتاح API
+document.getElementById('apiKeyInput').addEventListener('input', (e) => {
+    apiKey = e.target.value;
+});
+
+// زر الحفظ
+document.getElementById('saveApiKey').addEventListener('click', () => {
+    const enteredKey = document.getElementById('apiKeyInput').value;
+    if (enteredKey.trim() !== '') {
+        localStorage.setItem('savedApiKey', enteredKey.trim());
+        alert('✅ تم حفظ مفتاح API بنجاح');
+    } else {
+        alert('⚠️ يرجى إدخال مفتاح API صالح قبل الحفظ');
+    }
+});
+
+// تغيير وقت التحديث
+document.getElementById('autoRefreshSelect').addEventListener('change', (e) => {
+    updateIntervalSeconds = parseInt(e.target.value);
+    if (analyzeInterval) {
+        clearInterval(analyzeInterval);
+        analyzeInterval = setInterval(() => {
+            analyzeMarket();
+        }, updateIntervalSeconds * 1000);
+    }
+});
+</script>
