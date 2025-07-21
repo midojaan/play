@@ -1,10 +1,9 @@
 window.addEventListener("load", () => {
   if (!localStorage.getItem("accessGranted")) {
     document.getElementById("access-box").style.display = "flex";
-  } else {
-    document.getElementById("access-box").style.display = "none";
-    document.getElementById("home").style.display = "block";
+    return;
   }
+  startSplash();
 });
 
 function checkAccess() {
