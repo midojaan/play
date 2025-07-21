@@ -35,3 +35,14 @@
   transform: translate(-50%, -50%);
   text-align: center;
 }
+#splash-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 100vw;
+  max-height: 100vh;
+  object-fit: contain;
+  z-index: 2;
+  background: #000;
+}
