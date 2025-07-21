@@ -1,24 +1,37 @@
-function startSplash() {
-  const splash = document.getElementById("splash");
-  const audio = document.getElementById("splash-audio");
+#splash {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
 
-  if (sessionStorage.getItem("splash-shown")) {
-    splash.style.display = "none";
-    if (audio) audio.pause();
-    return;
-  }
+#splash-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 100%;
+  max-height: 100%;
+  z-index: 1;
+  object-fit: contain;
+}
 
-  if (audio) {
-    audio.volume = 0.5;
-    audio.play().catch(() => {});
-  }
-
-  setTimeout(() => {
-    splash.style.opacity = 0;
-    setTimeout(() => {
-      splash.style.display = "none";
-      if (audio) audio.pause();
-      sessionStorage.setItem("splash-shown", "true");
-    }, 1000);
-  }, 6000);
+.blur-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: black center center / cover no-repeat;
+  filter: blur(20px);
+  z-index: 0;
+  transform: scale(1.1);
+}
+.logo-box {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
 }
